@@ -47,7 +47,7 @@ export const settingsSchema = z.object({
     .array(
       z.object({
         platform: z.enum(SOCIAL_PLATFORMS),
-        url: safeUrl.refine((v) => v !== '', 'URL is required'),
+        url: safeUrl.refine((v) => v !== '', 'Please add a link'),
         label: plainText(60).default(''),
       }),
     )
@@ -57,6 +57,7 @@ export const settingsSchema = z.object({
     .object({
       sticky: z.boolean().default(true),
       showContactButton: z.boolean().default(true),
+      showResumeButton: z.boolean().default(false), // header “Download CV” when a résumé is uploaded
       contactButton: buttonSchema.removeDefault().default({ label: 'Contact', url: '/contact', style: 'primary' }),
     })
     .default({}),
@@ -72,7 +73,7 @@ export const settingsSchema = z.object({
   seo: z
     .object({
       titleTemplate: plainText(120)
-        .refine((v) => v.includes('%s'), 'Template must contain %s')
+        .refine((v) => v.includes('%s'), 'Must contain %s — it is replaced by each page’s title')
         .default('%s | Developer Portfolio'),
       defaultDescription: plainText(320).default(''),
       ogImage: mediaUrl.default(''),

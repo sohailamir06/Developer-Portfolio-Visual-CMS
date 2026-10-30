@@ -12,6 +12,7 @@ import Redirect from '../models/Redirect.js';
 import User from '../models/User.js';
 import { badRequest, notFound } from '../utils/errors.js';
 import { listRevisions, recordRevision } from '../services/revisions.js';
+import { siteHealth } from '../services/siteHealth.js';
 import { navigationSchema, projectSchema } from '../validators/content.js';
 import { settingsSchema } from '../validators/settings.js';
 import { sectionsSchema } from '../sections/index.js';
@@ -237,5 +238,6 @@ export async function dashboard(_req, res) {
     counts: { pages, unpublished, projects, publishedProjects, skills, experience, media, newMessages },
     recentMessages,
     recentPages: recentPages.map((p) => ({ ...p, title: p.draft?.title, draft: undefined })),
+    health: await siteHealth(),
   });
 }

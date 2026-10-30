@@ -51,6 +51,21 @@ export function defaultPages() {
           body: `<p>${SAMPLE_NOTE}</p><p>Describe your background, how you approach building software, and what you are looking for next.</p>`,
           strengths: ['Clean, maintainable code', 'Responsive interfaces', 'REST API design', 'Collaboration'],
         }),
+        createSection('education', {
+          eyebrow: 'Education',
+          items: [
+            {
+              institution: 'Your University (replace me)',
+              degree: 'B.Sc. Computer Science',
+              period: '2022 – 2026 (expected)',
+              highlights: ['Relevant coursework: Data Structures, Databases, Web Development'],
+            },
+          ],
+        }),
+        createSection('certifications', {
+          eyebrow: 'Credentials',
+          items: [{ kind: 'certificate', title: 'Example certificate (replace me)', issuer: 'Issuing organisation', date: '2025' }],
+        }),
         createSection('cta', {}),
       ],
     },

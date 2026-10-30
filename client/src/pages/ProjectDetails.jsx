@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, ExternalLink, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, ExternalLink, X } from 'lucide-react';
 import { publicApi, toApiError } from '../services/api.js';
 import { useDocumentMeta } from '../utils/hooks.js';
 import { useSite } from '../context/SiteContext.jsx';
@@ -11,6 +11,7 @@ import { SmartLink } from '../components/common/SmartLink.jsx';
 import { ErrorState, Loading } from '../components/common/Status.jsx';
 import { findRedirect } from './PageRoute.jsx';
 import NotFound from './NotFound.jsx';
+import { track } from '../utils/track.js';
 
 function ProjectMeta({ project }) {
   const { settings } = useSite();
@@ -57,7 +58,11 @@ export default function ProjectDetails() {
     window.scrollTo(0, 0);
     publicApi
       .project(slug)
-      .then((project) => active && setState({ loading: false, project }))
+      .then((project) => {
+        if (!active) return;
+        setState({ loading: false, project });
+        track('view', location.pathname);
+      })
       .catch(async (err) => {
         const error = toApiError(err);
         const redirect = error.status === 404 ? await findRedirect(location.pathname) : null;
@@ -107,8 +112,39 @@ export default function ProjectDetails() {
       )}
 
       <div className="container-site grid gap-12 py-16 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <RichText html={p.content} className="text-base sm:text-lg" />
+        <div className="min-w-0">
+          {p.highlights?.length > 0 && (
+            <section aria-label="Key highlights" className="card mb-10 border-accent/30 bg-accent/[0.06] p-6">
+              <h2 className="mb-4 font-mono text-xs uppercase tracking-widest text-accent">Key highlights</h2>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {p.highlights.map((h, i) => (
+                  <li key={i} className="flex gap-3 text-sm leading-relaxed sm:text-base">
+                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
+                    {h}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          <RichText html={p.content} className="text-base sm:text-lg" />
+        </div>
         <aside className="space-y-8 lg:sticky lg:top-24 lg:self-start">
+          {(p.role || p.year) && (
+            <dl className="space-y-4">
+              {p.role && (
+                <div>
+                  <dt className="mb-1 font-mono text-xs uppercase tracking-widest text-muted">My role</dt>
+                  <dd className="font-medium">{p.role}</dd>
+                </div>
+              )}
+              {p.year && (
+                <div>
+                  <dt className="mb-1 font-mono text-xs uppercase tracking-widest text-muted">Year</dt>
+                  <dd className="font-medium">{p.year}</dd>
+                </div>
+              )}
+            </dl>
+          )}
           {p.technologies?.length > 0 && (
             <div>
               <h2 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted">Tech stack</h2>

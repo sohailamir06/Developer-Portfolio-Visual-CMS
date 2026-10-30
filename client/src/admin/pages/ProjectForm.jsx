@@ -8,11 +8,11 @@ import ImageField from '../components/ImageField.jsx';
 import SeoFields from '../components/SeoFields.jsx';
 import RevisionHistory from '../components/RevisionHistory.jsx';
 import { LinkInput, resetLinkCache } from '../components/LinkFields.jsx';
-import { TagInput } from '../components/ListInputs.jsx';
+import { StringList, TagInput } from '../components/ListInputs.jsx';
 import { Button, Card, ErrorBox, Field, IconButton, Input, PageHeader, Select, Spinner, Textarea, Toggle, useUi } from '../components/ui.jsx';
 
 const EMPTY = {
-  title: '', slug: '', summary: '', content: '', featuredImage: {}, gallery: [], technologies: [], category: '',
+  title: '', slug: '', summary: '', content: '', featuredImage: {}, gallery: [], technologies: [], category: '', role: '', year: '', highlights: [],
   demoUrl: '', repoUrl: '', featured: false, status: 'draft', seo: {},
 };
 
@@ -107,7 +107,7 @@ export default function ProjectForm() {
             <Field label="Title" required error={fieldError('title')}>
               <Input value={form.title} onChange={(e) => set({ title: e.target.value, ...(slugTouched ? {} : { slug: toSlug(e.target.value) }) })} required maxLength={150} />
             </Field>
-            <Field label="URL slug" hint={`/projects/${form.slug || '…'}${!isNew && original?.status === 'published' ? ' · changing it redirects the old URL' : ''}`} error={fieldError('slug')}>
+            <Field label="Web address" hint={`/projects/${form.slug || '…'}`} help="Filled in from the title automatically. If you change it later, the old address keeps working and forwards visitors to the new one." error={fieldError('slug')}>
               <Input
                 value={form.slug}
                 onChange={(e) => {
@@ -118,6 +118,17 @@ export default function ProjectForm() {
             </Field>
             <Field label="Short description" hint="Shown on project cards." error={fieldError('summary')}>
               <Textarea rows={3} value={form.summary} onChange={(e) => set({ summary: e.target.value })} maxLength={500} />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
+              <Field label="My role" hint="What did you do? e.g. “Solo developer” or “Frontend lead in a team of 4”." error={fieldError('role')}>
+                <Input value={form.role} onChange={(e) => set({ role: e.target.value })} maxLength={120} />
+              </Field>
+              <Field label="Year" error={fieldError('year')}>
+                <Input value={form.year} onChange={(e) => set({ year: e.target.value })} maxLength={20} placeholder="e.g. 2025" />
+              </Field>
+            </div>
+            <Field label="Key highlights" hint="Short results recruiters can scan, e.g. “Used by 500+ students” or “Built the REST API with JWT auth”." help="These appear in a highlighted box on the project page, and the first one is shown on the project card. Numbers and outcomes make the strongest impression.">
+              <StringList value={form.highlights} onChange={(highlights) => set({ highlights })} addLabel="Add a highlight" max={10} />
             </Field>
             <Field label="Full description" error={fieldError('content')}>
               <RichTextEditor value={form.content} onChange={(content) => set({ content })} minHeight={240} />
@@ -157,16 +168,16 @@ export default function ProjectForm() {
 
         <div className="space-y-6">
           <Card className="space-y-4 p-5">
-            <Field label="Status" hint="Draft projects are never shown publicly.">
-              <Select value={form.status} onChange={(e) => set({ status: e.target.value })} options={[['draft', 'Draft'], ['published', 'Published']]} />
+            <Field label="Show on website?" hint="Choose “Hidden” while you are still working on it.">
+              <Select value={form.status} onChange={(e) => set({ status: e.target.value })} options={[['draft', 'Hidden (draft)'], ['published', 'Visible on website']]} />
             </Field>
-            <Toggle label="Featured" description="Show in “Featured projects” sections." checked={form.featured} onChange={(featured) => set({ featured })} />
+            <Toggle label="Feature on home page" description="Featured projects appear in the “Featured projects” section." checked={form.featured} onChange={(featured) => set({ featured })} />
           </Card>
           <Card className="space-y-4 p-5">
-            <Field label="Category" hint="Used for filtering, e.g. Web App, API, Mobile.">
+            <Field label="Category" hint="e.g. Web App, Mobile, API — visitors can filter by it.">
               <Input value={form.category} onChange={(e) => set({ category: e.target.value })} maxLength={60} />
             </Field>
-            <Field label="Technologies" hint="Press Enter after each one.">
+            <Field label="Technologies used" hint="Type one (e.g. React) and press Enter. Repeat for each.">
               <TagInput value={form.technologies} onChange={(technologies) => set({ technologies })} />
             </Field>
             <Field label="Live demo URL" hint="Leave empty to hide the button." error={fieldError('demoUrl')}>

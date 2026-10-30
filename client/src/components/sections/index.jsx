@@ -12,6 +12,9 @@ import Contact from './Contact.jsx';
 import TextImage from './TextImage.jsx';
 import Testimonials from './Testimonials.jsx';
 import Resume from './Resume.jsx';
+import Education from './Education.jsx';
+import Certifications from './Certifications.jsx';
+import Reveal from '../common/Reveal.jsx';
 
 /** One renderer per section type defined in server/sections/index.js. */
 export const SECTION_COMPONENTS = {
@@ -26,20 +29,24 @@ export const SECTION_COMPONENTS = {
   textImage: TextImage,
   testimonials: Testimonials,
   resume: Resume,
+  education: Education,
+  certifications: Certifications,
 };
 
 export const SECTION_LABELS = {
-  hero: 'Hero',
-  about: 'About',
+  hero: 'Intro banner',
+  about: 'About me',
   skills: 'Skills',
-  projects: 'Project Grid',
-  experience: 'Experience Timeline',
-  stats: 'Statistics',
-  cta: 'Call to Action',
+  projects: 'Projects',
+  experience: 'Work history',
+  stats: 'Highlights in numbers',
+  cta: 'Invitation banner',
   contact: 'Contact',
-  textImage: 'Text & Image',
+  textImage: 'Text & picture',
   testimonials: 'Testimonials',
-  resume: 'Résumé',
+  resume: 'Résumé / CV',
+  education: 'Education',
+  certifications: 'Certificates & awards',
 };
 
 function EditableSection({ section, children, edit }) {
@@ -82,7 +89,10 @@ export function PageRenderer({ sections = [] }) {
         {content}
       </EditableSection>
     ) : (
-      <div key={section.id || index}>{content}</div>
+      // The first section is above the fold, so it appears immediately; the rest fade in on scroll.
+      <Reveal key={section.id || index} immediate={index === 0}>
+        {content}
+      </Reveal>
     );
   });
 }

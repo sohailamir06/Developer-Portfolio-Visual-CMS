@@ -57,6 +57,7 @@ export const adminApi = {
   me: () => data(api.get('/auth/me')),
   health: () => data(api.get('/health')),
   dashboard: () => data(api.get('/admin/dashboard')),
+  analytics: (days = 30) => data(api.get('/admin/analytics', { params: { days } })),
   sectionTypes: () => data(api.get('/admin/section-types')),
 
   pages: {

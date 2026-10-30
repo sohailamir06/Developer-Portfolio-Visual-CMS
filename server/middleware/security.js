@@ -41,6 +41,13 @@ export const contactLimiter = rateLimit({
   ...limiterMessage('Too many messages sent. Please try again later.'),
 });
 
+// Analytics pings: generous, but stops one client inflating the numbers.
+export const trackLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  ...limiterMessage('Too many requests.'),
+});
+
 export const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 600,

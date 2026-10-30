@@ -147,6 +147,45 @@ export const SECTION_TYPES = {
     downloadButton: button({ label: 'Download Résumé (PDF)', url: '', style: 'primary' }),
     showEmbed: z.boolean().default(true),
   }),
+
+  // Student-focused: degrees, courses and results.
+  education: z.object({
+    ...header,
+    heading: text(200, 'Education'),
+    items: z
+      .array(
+        z.object({
+          institution: text(150),
+          degree: text(150),
+          period: text(60), // free text, e.g. "2022 – 2026 (expected)"
+          location: text(120),
+          grade: text(60),
+          description: text(800),
+          highlights: z.array(text(200)).max(12).default([]),
+          logo: imageSchema,
+        }),
+      )
+      .max(15)
+      .default([]),
+  }),
+
+  certifications: z.object({
+    ...header,
+    heading: text(200, 'Certifications & Achievements'),
+    items: z
+      .array(
+        z.object({
+          kind: z.enum(['certificate', 'award', 'achievement']).default('certificate'),
+          title: text(150),
+          issuer: text(150),
+          date: text(40),
+          credentialUrl: safeUrl.default(''),
+          description: text(500),
+        }),
+      )
+      .max(40)
+      .default([]),
+  }),
 };
 
 export const SECTION_LABELS = {
@@ -161,6 +200,8 @@ export const SECTION_LABELS = {
   textImage: 'Text & Image',
   testimonials: 'Testimonials',
   resume: 'Résumé',
+  education: 'Education',
+  certifications: 'Certifications & Achievements',
 };
 
 export const styleSchema = z

@@ -150,7 +150,7 @@ export default function Settings() {
             <Field label="Tagline">
               <Input value={s.tagline} onChange={(e) => { setS((x) => ({ ...x, tagline: e.target.value })); setDirty(true); }} maxLength={200} />
             </Field>
-            <Field label="Favicon" hint="Square PNG, 64×64 or larger.">
+            <Field label="Browser tab icon (favicon)" hint="The tiny picture shown in the browser tab. Use a square image, 64×64 or larger.">
               <ImageField value={{ url: s.favicon }} onChange={(img) => { setS((x) => ({ ...x, favicon: img.url })); setDirty(true); }} options={[]} />
             </Field>
           </Card>
@@ -190,7 +190,7 @@ export default function Settings() {
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Default mode">
+              <Field label="Light or dark website">
                 <Select value={t.mode} onChange={(e) => set('theme', { mode: e.target.value })} options={[['dark', 'Dark'], ['light', 'Light']]} />
               </Field>
               <div className="pt-6">
@@ -206,7 +206,7 @@ export default function Settings() {
               <Field label="Button style">
                 <Select value={t.buttonStyle} onChange={(e) => set('theme', { buttonStyle: e.target.value })} options={[['solid', 'Solid'], ['soft', 'Soft / tinted'], ['pill', 'Pill (fully rounded)']]} />
               </Field>
-              <Field label="Corner radius">
+              <Field label="Corner roundness">
                 <Select value={t.radius} onChange={(e) => set('theme', { radius: e.target.value })} options={[['none', 'Square'], ['sm', 'Small'], ['md', 'Medium'], ['lg', 'Large'], ['xl', 'Extra large']]} />
               </Field>
               <Field label="Header layout">
@@ -269,6 +269,12 @@ export default function Settings() {
           <Card className="space-y-4 p-5">
             <h2 className="text-sm font-semibold">Header</h2>
             <Toggle label="Sticky header" description="Header stays visible while scrolling." checked={s.header.sticky} onChange={(sticky) => set('header', { sticky })} />
+            <Toggle
+              label="Show “Download CV” button"
+              description={s.resume.url ? 'Lets recruiters grab your CV from any page.' : 'Upload your CV in the Résumé tab first.'}
+              checked={Boolean(s.header.showResumeButton)}
+              onChange={(showResumeButton) => set('header', { showResumeButton })}
+            />
             <Toggle label="Show contact button" checked={s.header.showContactButton} onChange={(showContactButton) => set('header', { showContactButton })} />
             {s.header.showContactButton && <ButtonField value={s.header.contactButton} onChange={(contactButton) => set('header', { contactButton })} />}
             <p className="text-xs text-slate-500">Menu links are edited under Navigation. Logo under Branding.</p>

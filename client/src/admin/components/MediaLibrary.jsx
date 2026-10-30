@@ -145,7 +145,7 @@ export default function MediaLibrary({ mode = 'manage', type = 'all', onSelect }
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name, alt text or caption" className="pl-9" aria-label="Search media" />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search your pictures and files" className="pl-9" aria-label="Search media" />
         </div>
         <Button variant="primary" icon={Upload} onClick={uploader.open} loading={uploader.progress !== null}>
           {uploader.progress !== null ? `Uploading ${uploader.progress}%` : 'Upload'}
@@ -269,7 +269,7 @@ function MediaDetails({ item, onSaved, onDelete }) {
           <dd>{new Date(item.createdAt).toLocaleString()}</dd>
         </div>
       </dl>
-      <Field label="Alternative text" hint="Describe the image for screen readers and search engines.">
+      <Field label="Describe the picture" hint="e.g. “Screenshot of the dashboard”." help="Read aloud to blind visitors and used by Google. Write what the picture shows, in a few words.">
         <Input value={alt} onChange={(e) => setAlt(e.target.value)} maxLength={300} />
       </Field>
       <Field label="Caption">

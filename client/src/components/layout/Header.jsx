@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { ChevronDown, Menu, Moon, Sun, X } from 'lucide-react';
+import { ChevronDown, Download, Menu, Moon, Sun, X } from 'lucide-react';
 import { useSite } from '../../context/SiteContext.jsx';
 import { SmartLink } from '../common/SmartLink.jsx';
 import { CmsButton } from '../common/CmsButton.jsx';
@@ -86,6 +86,12 @@ export default function Header() {
   }, []);
 
   const contact = header.showContactButton !== false && <CmsButton button={header.contactButton} className="!px-4 !py-2" icon={false} />;
+  // One-click CV for recruiters, shown when enabled in Settings and a résumé is uploaded.
+  const cv = header.showResumeButton && settings?.resume?.url && (
+    <SmartLink to={settings.resume.url} newTab className="btn btn-outline !px-4 !py-2" aria-label="Download CV (opens in a new tab)">
+      <Download size={15} aria-hidden="true" /> CV
+    </SmartLink>
+  );
   const toggle = toggleMode && (
     <button type="button" onClick={toggleMode} className="grid h-9 w-9 place-items-center rounded-theme text-muted transition hover:bg-surface hover:text-fg" aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}>
       {mode === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -117,6 +123,7 @@ export default function Header() {
             <div className="hidden items-center gap-3 lg:flex">
               {nav}
               {toggle}
+              {cv}
               {contact}
             </div>
           </>
@@ -129,7 +136,10 @@ export default function Header() {
             {layout === 'split' && nav}
             <div className="flex items-center gap-2">
               <div className="hidden lg:block">{toggle}</div>
-              <div className="hidden sm:block">{contact}</div>
+              <div className="hidden items-center gap-2 sm:flex">
+                {cv}
+                {contact}
+              </div>
               <MobileButton open={open} setOpen={setOpen} />
             </div>
           </>
@@ -151,7 +161,8 @@ export default function Header() {
                 ))}
               </div>
             ))}
-            <div className="mt-3 flex items-center gap-3 border-t border-line pt-4">
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-4">
+              {cv}
               {contact}
               {toggle}
             </div>

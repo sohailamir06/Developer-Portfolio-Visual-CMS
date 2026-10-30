@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Eye, History, Layers, Monitor, MoreHorizontal, PanelRight, Rocket, Save, Settings2, Smartphone, Tablet, Undo2,
+  ArrowLeft, Eye, HelpCircle, History, Layers, Monitor, MoreHorizontal, PanelRight, Redo2, Rocket, Save, Settings2, Smartphone, Tablet, Undo2,
 } from 'lucide-react';
+import { useUndoable } from '../hooks/useUndoable.js';
 import { adminApi, toApiError } from '../../services/api.js';
 import { clone, newId, pagePath, toSlug } from '../utils.js';
 import { resetLinkCache } from '../components/LinkFields.jsx';
@@ -13,9 +14,27 @@ import SectionList, { AddSectionModal } from './SectionList.jsx';
 import PropertiesPanel from './PropertiesPanel.jsx';
 import PreviewFrame, { DEVICES } from './PreviewFrame.jsx';
 import { SECTION_META } from './sectionFields.js';
+import EditorTour, { hasSeenTour } from './EditorTour.jsx';
 import { cx } from '../../utils/links.js';
 
 const DEVICE_ICONS = { desktop: Monitor, tablet: Tablet, mobile: Smartphone };
+const AUTOSAVE_DELAY_MS = 4000;
+const AUTOSAVE_KEY = 'pf-editor-autosave'; // per-browser preference only
+
+function readAutosavePref() {
+  try {
+    return localStorage.getItem(AUTOSAVE_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+function writeAutosavePref(on) {
+  try {
+    localStorage.setItem(AUTOSAVE_KEY, on ? 'on' : 'off');
+  } catch {
+    /* storage unavailable — preference lasts for this visit */
+  }
+}
 const draftOf = (page) => ({ title: page.draft.title, seo: page.draft.seo || {}, sections: page.draft.sections || [] });
 
 function PageSettingsPanel({ page, draft, setDraft, onSlugSaved, onTogglePublished }) {
@@ -47,10 +66,10 @@ function PageSettingsPanel({ page, draft, setDraft, onSlugSaved, onTogglePublish
         <h2 className="text-sm font-semibold">{draft.title}</h2>
       </div>
       <div className="flex-1 space-y-5 overflow-y-auto p-4">
-        <Field label="Page title" hint="Shown in the browser tab and search results (unless an SEO title is set).">
+        <Field label="Page name" hint="Shown in the browser tab and in Google results.">
           <Input value={draft.title} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} maxLength={120} />
         </Field>
-        <Field label="URL" hint={isHome ? 'The home page is always served at /.' : 'Changing the URL creates a redirect from the old one.'}>
+        <Field label="Web address" hint={isHome ? 'Your home page is always at the main address of your site.' : 'If you change it, visitors using the old address are sent to the new one automatically.'}>
           <div className="flex gap-2">
             <Input value={isHome ? '/' : slug} disabled={isHome} onChange={(e) => setSlug(toSlug(e.target.value))} />
             {!isHome && (
@@ -62,8 +81,8 @@ function PageSettingsPanel({ page, draft, setDraft, onSlugSaved, onTogglePublish
         </Field>
         {!isHome && (
           <div className="rounded-lg border border-slate-200 p-3 text-sm">
-            <p className="font-medium">Visibility</p>
-            <p className="mb-2 text-xs text-slate-500">{page.status === 'published' ? 'This page is live. Unpublishing hides it and removes it from the navigation.' : 'This page is not visible to visitors yet.'}</p>
+            <p className="font-medium">Who can see this page</p>
+            <p className="mb-2 text-xs text-slate-500">{page.status === 'published' ? 'Everyone can see this page. Unpublishing hides it and removes it from your menu.' : 'Only you can see this page. Click Publish to put it on your website.'}</p>
             {page.status === 'published' && (
               <Button size="sm" variant="danger-ghost" onClick={onTogglePublished}>
                 Unpublish page
@@ -72,7 +91,7 @@ function PageSettingsPanel({ page, draft, setDraft, onSlugSaved, onTogglePublish
           </div>
         )}
         <div>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Search & social</h3>
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">How it appears in Google & when shared</h3>
           <SeoFields value={draft.seo} onChange={(seo) => setDraft((d) => ({ ...d, seo }))} fallbackTitle={draft.title} path={pagePath(page.slug)} />
         </div>
       </div>
@@ -86,8 +105,14 @@ export default function PageEditor() {
   const { toast, confirm } = useUi();
 
   const [page, setPage] = useState(null);
-  const [draft, setDraftState] = useState(null);
+  const draftState = useUndoable(null);
+  const { value: draft, reset: setDraftState } = draftState;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
   const [dirty, setDirty] = useState(false);
+  const [autosave, setAutosave] = useState(() => readAutosavePref());
+  const [autosavedAt, setAutosavedAt] = useState(null);
+  const [autosavePaused, setAutosavePaused] = useState(false); // after a failed save, wait for the next edit
   const [loadError, setLoadError] = useState(null);
   const [saveError, setSaveError] = useState(null);
   const [busy, setBusy] = useState(null); // 'save' | 'publish' | 'discard'
@@ -98,6 +123,7 @@ export default function PageEditor() {
   const [adding, setAdding] = useState(false);
   const [history, setHistory] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [tour, setTour] = useState(() => !hasSeenTour());
   const [defaults, setDefaults] = useState({});
 
   const load = useCallback(async () => {
@@ -111,16 +137,28 @@ export default function PageEditor() {
     } catch (err) {
       setLoadError(toApiError(err));
     }
-  }, [id]);
+  }, [id, setDraftState]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const setDraft = useCallback((updater) => {
-    setDraftState((d) => (typeof updater === 'function' ? updater(d) : updater));
-    setDirty(true);
-  }, []);
+  const { set: recordDraft, undo: undoDraft, redo: redoDraft } = draftState;
+  const setDraft = useCallback(
+    (updater) => {
+      recordDraft(updater);
+      setDirty(true);
+      setAutosavePaused(false);
+    },
+    [recordDraft],
+  );
+
+  const undo = useCallback(() => {
+    if (undoDraft()) setDirty(true);
+  }, [undoDraft]);
+  const redo = useCallback(() => {
+    if (redoDraft()) setDirty(true);
+  }, [redoDraft]);
 
   const setSections = useCallback((fn) => setDraft((d) => ({ ...d, sections: fn(d.sections) })), [setDraft]);
 
@@ -135,39 +173,65 @@ export default function PageEditor() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [dirty]);
 
+  // Saving keeps the local draft (and its undo history); it only clears "dirty" if nothing changed meanwhile.
   const save = useCallback(
-    async ({ quiet } = {}) => {
-      setBusy('save');
+    async ({ quiet, auto } = {}) => {
+      const sent = draftRef.current;
+      setBusy(auto ? 'autosave' : 'save');
       setSaveError(null);
       try {
-        const updated = await adminApi.pages.saveDraft(id, draft);
+        const updated = await adminApi.pages.saveDraft(id, sent);
         setPage(updated);
-        setDraftState(draftOf(updated));
-        setDirty(false);
-        if (!quiet) toast('Draft saved — the public site is unchanged until you publish.');
+        if (draftRef.current === sent) setDirty(false);
+        if (auto) setAutosavedAt(new Date());
+        else if (!quiet) toast('Draft saved — the public site is unchanged until you publish.');
         return updated;
       } catch (err) {
         const e = toApiError(err);
         setSaveError(e);
-        toast(e.message, 'error');
+        if (auto) setAutosavePaused(true);
+        else toast(e.message, 'error');
         return null;
       } finally {
         setBusy(null);
       }
     },
-    [id, draft, toast],
+    [id, toast],
   );
+
+  // Autosave the draft a few seconds after the last edit. Drafts never affect the live site.
+  useEffect(() => {
+    if (!autosave || !dirty || busy || autosavePaused) return undefined;
+    const t = setTimeout(() => save({ auto: true }), AUTOSAVE_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [autosave, dirty, busy, autosavePaused, draft, save]);
+
+  const toggleAutosave = () => {
+    setAutosave((on) => {
+      writeAutosavePref(!on);
+      return !on;
+    });
+  };
 
   useEffect(() => {
     const onKey = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const key = e.key.toLowerCase();
+      if (key === 's') {
         e.preventDefault();
         if (dirty && !busy) save();
+        return;
       }
+      // Leave text fields their native undo; elsewhere, undo/redo the whole page draft.
+      const inField = e.target.closest?.('input, textarea, select, [contenteditable="true"]');
+      if (inField || (key !== 'z' && key !== 'y')) return;
+      e.preventDefault();
+      if (key === 'y' || (key === 'z' && e.shiftKey)) redo();
+      else undo();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [dirty, busy, save]);
+  }, [dirty, busy, save, undo, redo]);
 
   const publish = async () => {
     if (!(await confirm({ title: 'Publish this page?', message: 'Visitors will see the current draft immediately. The previous version is kept in the revision history.', confirmLabel: 'Publish' }))) return;
@@ -176,7 +240,6 @@ export default function PageEditor() {
     try {
       const updated = await adminApi.pages.publish(id);
       setPage(updated);
-      setDraftState(draftOf(updated));
       setDirty(false);
       toast('Published! Your changes are now live.');
     } catch (err) {
@@ -280,14 +343,16 @@ export default function PageEditor() {
   }
   if (!page || !draft) return <Spinner className="min-h-screen" label="Loading editor…" />;
 
-  const status = dirty ? (
-    <Badge color="amber">Unsaved changes</Badge>
+  const status = busy === 'autosave' ? (
+    <Badge color="slate">Saving…</Badge>
+  ) : dirty ? (
+    <Badge color="amber">{autosave && !autosavePaused ? 'Saving soon…' : 'Changes not saved'}</Badge>
   ) : page.status !== 'published' ? (
-    <Badge color="slate">Not published</Badge>
+    <Badge color="slate">Not on your website yet</Badge>
   ) : page.hasUnpublishedChanges ? (
-    <Badge color="blue">Draft saved · not live</Badge>
+    <Badge color="blue">Saved — not published yet</Badge>
   ) : (
-    <Badge color="green">Live</Badge>
+    <Badge color="green">Live on your website</Badge>
   );
 
   const leftPanel = (
@@ -338,7 +403,8 @@ export default function PageEditor() {
             {status}
           </div>
           <p className="truncate text-[11px] text-slate-500">
-            {pagePath(page.slug)} · v{page.version} {page.draftSavedAt && `· draft saved ${new Date(page.draftSavedAt).toLocaleTimeString()}`}
+            {pagePath(page.slug)} · v{page.version} {page.draftSavedAt && `· draft ${autosavedAt ? 'autosaved' : 'saved'} ${new Date(page.draftSavedAt).toLocaleTimeString()}`}
+            {autosavePaused && <span className="text-red-600"> · autosave paused (fix the error, then keep editing)</span>}
           </p>
         </div>
 
@@ -363,12 +429,22 @@ export default function PageEditor() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          <IconButton icon={Settings2} label="Page settings & SEO" onClick={() => { setSelected(null); setPanel('properties'); }} />
-          <IconButton icon={History} label="Revision history" onClick={() => setHistory(true)} />
+          <IconButton icon={Undo2} label="Undo (Ctrl+Z)" onClick={undo} disabled={!draftState.canUndo} />
+          <IconButton icon={Redo2} label="Redo (Ctrl+Shift+Z)" onClick={redo} disabled={!draftState.canRedo} />
+          <span className="mx-0.5 hidden h-5 w-px bg-slate-200 sm:block" />
+          <IconButton icon={HelpCircle} label="How to use the editor" onClick={() => setTour(true)} />
+          <IconButton icon={Settings2} label="Page settings (name, address, Google)" onClick={() => { setSelected(null); setPanel('properties'); }} />
+          <IconButton icon={History} label="History — bring back an earlier version" onClick={() => setHistory(true)} />
           <div className="relative">
             <IconButton icon={MoreHorizontal} label="More actions" onClick={() => setMenu((m) => !m)} />
             {menu && (
-              <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-lg border border-slate-200 bg-white p-1 shadow-lg" onMouseLeave={() => setMenu(false)}>
+              <div className="absolute right-0 top-full z-50 mt-1 w-60 rounded-lg border border-slate-200 bg-white p-1 shadow-lg" onMouseLeave={() => setMenu(false)}>
+                <button type="button" role="menuitemcheckbox" aria-checked={autosave} className="flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={toggleAutosave}>
+                  <span className="flex items-center gap-2">
+                    <Save size={15} /> Autosave drafts
+                  </span>
+                  <Badge color={autosave ? 'green' : 'slate'}>{autosave ? 'On' : 'Off'}</Badge>
+                </button>
                 <button type="button" className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:opacity-40" onClick={discard} disabled={!page.published || (!dirty && !page.hasUnpublishedChanges)}>
                   <Undo2 size={15} /> Discard changes
                 </button>
@@ -393,7 +469,7 @@ export default function PageEditor() {
       </header>
       {saveError && (
         <div className="border-b border-red-200 bg-red-50 px-4 py-2">
-          <ErrorBox error={saveError} />
+          <ErrorBox error={saveError} sections={draft.sections} />
         </div>
       )}
 
@@ -418,6 +494,7 @@ export default function PageEditor() {
         ))}
       </nav>
 
+      <EditorTour open={tour} onClose={() => setTour(false)} />
       <AddSectionModal open={adding} onClose={() => setAdding(false)} onAdd={addSection} />
       <RevisionHistory
         open={history}

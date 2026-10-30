@@ -77,7 +77,7 @@ export default function Projects() {
                       <Star size={10} /> Featured
                     </Badge>
                   )}
-                  <Badge color={p.status === 'published' ? 'green' : 'slate'}>{p.status === 'published' ? 'Published' : 'Draft'}</Badge>
+                  <Badge color={p.status === 'published' ? 'green' : 'slate'}>{p.status === 'published' ? 'Visible' : 'Hidden'}</Badge>
                 </div>
                 <IconButton icon={Pencil} label={`Edit ${p.title}`} onClick={() => navigate(`/admin/projects/${p._id}`)} />
                 {p.status === 'published' && (

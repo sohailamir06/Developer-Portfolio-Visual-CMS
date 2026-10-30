@@ -64,8 +64,8 @@ export default function Navigation() {
   return (
     <>
       <PageHeader
-        title="Navigation"
-        description="Edit the links in your header and footer. Changes go live when you save."
+        title="Menus"
+        description="The links at the top (header) and bottom (footer) of your website. Changes go live as soon as you save."
         actions={
           <>
             <Button icon={History} onClick={() => setHistory(true)}>
@@ -111,11 +111,11 @@ export default function Navigation() {
                   aria-label="Parent item"
                   value={item.parentId || ''}
                   onChange={(e) => update(item.id, { parentId: e.target.value || null })}
-                  options={[['', 'Top level'], ...items.filter((i) => i.id !== item.id && !i.parentId).map((i) => [i.id, `Under: ${i.label}`])]}
+                  options={[['', 'Main menu item'], ...items.filter((i) => i.id !== item.id && !i.parentId).map((i) => [i.id, `Inside “${i.label}” dropdown`])]}
                   className="md:w-40"
                 />
                 <div className="flex items-center gap-2">
-                  <Toggle size="sm" label="New tab" checked={item.newTab} onChange={(newTab) => update(item.id, { newTab })} />
+                  <Toggle size="sm" label="Open in new tab" checked={item.newTab} onChange={(newTab) => update(item.id, { newTab })} />
                   <IconButton icon={item.visible ? Eye : EyeOff} label={item.visible ? 'Hide link' : 'Show link'} onClick={() => update(item.id, { visible: !item.visible })} />
                   <IconButton icon={Trash2} label="Remove link" variant="danger-ghost" onClick={() => remove(item.id)} />
                 </div>

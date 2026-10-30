@@ -93,7 +93,10 @@ export default function Hero({ section }) {
   );
 
   return (
-    <SectionFrame section={section} className="overflow-hidden !pt-12 sm:!pt-20" label="Introduction">
+    <SectionFrame section={section} className="isolate overflow-hidden !pt-12 sm:!pt-20" label="Introduction">
+      <div className="hero-backdrop pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
+      <div className="pointer-events-none absolute -left-32 top-10 -z-10 h-72 w-72 rounded-full bg-primary/15 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -right-24 bottom-0 -z-10 h-72 w-72 rounded-full bg-secondary/10 blur-3xl" aria-hidden="true" />
       {centered ? (
         <>
           {image}

@@ -43,6 +43,7 @@
 | GET | `/public/skills` | Visible skills |
 | GET | `/public/experience` | Visible experience entries |
 | GET | `/public/redirects/resolve?path=/old` | `{to, statusCode}` or 404 |
+| POST | `/public/track` | `{kind: 'view'|'resume', path}` → 204. Privacy-friendly counter: daily totals only, no personal data. Bots, Do-Not-Track/GPC visitors and signed-in admins are skipped. Rate limited. |
 | POST | `/public/contact` | `{name, email, subject?, message}`. Validated, honeypot-protected and rate limited. |
 | GET | `/health` | `{ok, mediaProvider, emailEnabled}` |
 
@@ -52,6 +53,7 @@ These responses send `Cache-Control: public, max-age=0, must-revalidate` with an
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/admin/dashboard` | Counts and recent activity |
+| GET | `/admin/analytics?days=7|30|90` | Daily page views and CV downloads, totals vs the previous period, top pages |
 | GET | `/admin/section-types` | Default data and style for every section type |
 | GET / POST | `/admin/pages` | List or create `{title, slug, pageType, template}` |
 | GET / PUT / DELETE | `/admin/pages/:id` | Get the full document, update `{slug?, pageType?}` (a slug change creates a redirect), or delete |

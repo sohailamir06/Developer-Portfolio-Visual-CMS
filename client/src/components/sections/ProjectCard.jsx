@@ -17,9 +17,10 @@ export default function ProjectCard({ project }) {
         />
       </Link>
       <div className="flex flex-1 flex-col p-6">
-        {(project.category || project.featured) && (
-          <div className="mb-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest">
+        {(project.category || project.featured || project.year) && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-widest">
             {project.category && <span className="text-primary">{project.category}</span>}
+            {project.year && <span className="text-muted">{project.year}</span>}
             {project.featured && <span className="rounded-full bg-accent/10 px-2 py-0.5 text-accent">Featured</span>}
           </div>
         )}
@@ -28,7 +29,14 @@ export default function ProjectCard({ project }) {
             {project.title}
           </Link>
         </h3>
+        {project.role && <p className="mt-1.5 text-xs font-medium text-fg/70">My role: {project.role}</p>}
         {project.summary && <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted">{project.summary}</p>}
+        {project.highlights?.[0] && (
+          <p className="mt-3 flex gap-2 text-sm text-fg/85">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+            {project.highlights[0]}
+          </p>
+        )}
         {project.technologies?.length > 0 && (
           <ul className="mt-5 flex flex-wrap gap-1.5" aria-label="Technologies">
             {project.technologies.slice(0, 6).map((t) => (

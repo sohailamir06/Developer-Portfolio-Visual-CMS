@@ -32,7 +32,7 @@ export const resetLinkCache = () => {
 };
 
 /** URL input with internal page suggestions and the same safety rule the server enforces. */
-export function LinkInput({ value, onChange, placeholder = '/page or https://…', allowEmpty = true, id }) {
+export function LinkInput({ value, onChange, placeholder = 'Choose a page, or paste a web address', allowEmpty = true, id }) {
   const listId = useId();
   const links = useInternalLinks();
   const invalid = value && !isSafeUrl(value);
@@ -40,12 +40,12 @@ export function LinkInput({ value, onChange, placeholder = '/page or https://…
   return (
     <div className="space-y-1">
       <div className="relative">
-        <Input id={id} value={value || ''} onChange={(e) => onChange(e.target.value.trim())} placeholder={placeholder} list={listId} invalid={invalid || (!allowEmpty && !value)} className="pr-20" />
+        <Input id={id} value={value || ''} onChange={(e) => onChange(e.target.value.trim())} placeholder={placeholder} list={listId} invalid={invalid || (!allowEmpty && !value)} className="pr-24" />
         {kind && (
           <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
             <Badge color={kind === 'external' ? 'amber' : 'blue'}>
               {kind === 'external' ? <ExternalLink size={10} /> : <LinkIcon size={10} />}
-              {kind}
+              {kind === 'external' ? 'other site' : kind === 'anchor' ? 'jump link' : 'your site'}
             </Badge>
           </span>
         )}
@@ -57,16 +57,16 @@ export function LinkInput({ value, onChange, placeholder = '/page or https://…
           ))}
         </datalist>
       </div>
-      {invalid && <p className="text-xs text-red-600">Not allowed. Use https://…, /path, #anchor, mailto: or tel:</p>}
+      {invalid && <p className="text-xs text-red-600">This link won’t work. Pick one of your pages from the list, or paste a full web address starting with https://</p>}
     </div>
   );
 }
 
 const BUTTON_STYLES = [
-  ['primary', 'Primary (filled)'],
-  ['secondary', 'Secondary (tinted)'],
-  ['outline', 'Outline'],
-  ['ghost', 'Text only'],
+  ['primary', 'Filled (stands out most)'],
+  ['secondary', 'Lightly tinted'],
+  ['outline', 'Outlined'],
+  ['ghost', 'Plain text link'],
 ];
 
 /** Editor for a CMS button object: label, URL, internal/external, new tab, style, visibility. */
@@ -74,19 +74,19 @@ export function ButtonField({ value = {}, onChange }) {
   const set = (patch) => onChange({ ...value, ...patch });
   return (
     <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
-      <Toggle size="sm" label="Show button" checked={value.visible !== false} onChange={(v) => set({ visible: v })} />
+      <Toggle size="sm" label="Show this button" checked={value.visible !== false} onChange={(v) => set({ visible: v })} />
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Button text">
           <Input value={value.label || ''} onChange={(e) => set({ label: e.target.value })} maxLength={80} placeholder="e.g. View projects" />
         </Field>
-        <Field label="Style">
+        <Field label="Look">
           <Select value={value.style || 'primary'} onChange={(e) => set({ style: e.target.value })} options={BUTTON_STYLES} />
         </Field>
       </div>
-      <Field label="Destination" hint="Pick a page from the list or paste an external URL.">
+      <Field label="Where it goes" hint="Click the box to pick one of your pages, or paste a link to another website.">
         <LinkInput value={value.url} onChange={(url) => set({ url, newTab: isExternal(url) && !value.url ? true : value.newTab })} />
       </Field>
-      <Toggle size="sm" label="Open in a new tab" checked={Boolean(value.newTab)} onChange={(v) => set({ newTab: v })} />
+      <Toggle size="sm" label="Open in a new browser tab" checked={Boolean(value.newTab)} onChange={(v) => set({ newTab: v })} />
     </div>
   );
 }

@@ -28,42 +28,42 @@ export default function ImageField({ value = {}, onChange, options = ['alt', 'ca
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
           <div className="flex flex-wrap gap-1.5">
             <Button size="sm" icon={Library} onClick={() => setPicker(true)}>
-              {value.url ? 'Replace' : 'Choose'}
+              {value.url ? 'Change picture' : 'Choose picture'}
             </Button>
             <Button size="sm" icon={Upload} onClick={uploader.open} loading={uploader.progress !== null}>
               {uploader.progress !== null ? `${uploader.progress}%` : 'Upload'}
             </Button>
             {value.url && <Button size="sm" variant="danger-ghost" icon={Trash2} onClick={() => set({ url: '' })} aria-label="Remove image" />}
           </div>
-          <Input value={value.url || ''} onChange={(e) => set({ url: e.target.value.trim() })} placeholder="or paste an image URL" className="!py-1.5 text-xs" aria-label="Image URL" />
+          <Input value={value.url || ''} onChange={(e) => set({ url: e.target.value.trim() })} placeholder="…or paste a link to a picture" className="!py-1.5 text-xs" aria-label="Image URL" />
         </div>
       </div>
       <ErrorBox error={uploader.error} />
       {options.includes('alt') && (
-        <Field label="Alternative text" hint="Required for accessibility unless the image is purely decorative.">
+        <Field label="Describe the picture" hint="e.g. “Portrait of me smiling”." help="This text is read aloud to blind visitors and helps Google understand your picture. It is also shown if the picture can’t load.">
           <Input value={value.alt || ''} onChange={(e) => set({ alt: e.target.value })} maxLength={300} />
         </Field>
       )}
       {options.includes('caption') && (
-        <Field label="Caption (optional)">
+        <Field label="Caption under the picture (optional)">
           <Input value={value.caption || ''} onChange={(e) => set({ caption: e.target.value })} maxLength={300} />
         </Field>
       )}
       {(options.includes('fit') || options.includes('position') || options.includes('shape')) && (
         <div className="grid grid-cols-3 gap-2">
           {options.includes('fit') && (
-            <Field label="Fit">
-              <Select value={value.fit || 'cover'} onChange={(e) => set({ fit: e.target.value })} options={[['cover', 'Fill'], ['contain', 'Fit inside']]} />
+            <Field label="Sizing">
+              <Select value={value.fit || 'cover'} onChange={(e) => set({ fit: e.target.value })} options={[['cover', 'Fill the frame'], ['contain', 'Show whole picture']]} />
             </Field>
           )}
           {options.includes('position') && (
-            <Field label="Focus">
-              <Select value={value.position || 'center'} onChange={(e) => set({ position: e.target.value })} options={['center', 'top', 'bottom', 'left', 'right']} />
+            <Field label="Keep in view" help="If the picture gets cropped, this part stays visible.">
+              <Select value={value.position || 'center'} onChange={(e) => set({ position: e.target.value })} options={[['center', 'Centre'], ['top', 'Top'], ['bottom', 'Bottom'], ['left', 'Left'], ['right', 'Right']]} />
             </Field>
           )}
           {options.includes('shape') && (
             <Field label="Shape">
-              <Select value={value.shape || 'rounded'} onChange={(e) => set({ shape: e.target.value })} options={['rounded', 'circle', 'square']} />
+              <Select value={value.shape || 'rounded'} onChange={(e) => set({ shape: e.target.value })} options={[['rounded', 'Rounded corners'], ['circle', 'Circle'], ['square', 'Square corners']]} />
             </Field>
           )}
         </div>

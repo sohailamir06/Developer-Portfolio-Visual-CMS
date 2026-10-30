@@ -1,6 +1,8 @@
 import { cloneElement, createContext, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Info, Loader2, X } from 'lucide-react';
 import { cx } from '../../utils/links.js';
+import HelpTip from './HelpTip.jsx';
+import { friendlyMessage, humanizePath } from '../friendlyErrors.js';
 
 /* ------------------------------------------------------------------ Buttons */
 const VARIANTS = {
@@ -50,7 +52,22 @@ export function IconButton({ icon: Icon, label, className, variant = 'ghost', ..
 const inputBase =
   'block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 disabled:bg-slate-50 disabled:text-slate-500';
 
-export function Field({ label, hint, error, children, className, htmlFor, required, id }) {
+/** Collapsible group for options most people never need, so forms stay short by default. */
+export function MoreOptions({ title = 'More options', children, defaultOpen = false }) {
+  return (
+    <details className="group rounded-lg border border-slate-200 bg-white" open={defaultOpen || undefined}>
+      <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
+        {title}
+        <span className="text-slate-400 transition group-open:rotate-90" aria-hidden="true">
+          ›
+        </span>
+      </summary>
+      <div className="space-y-4 border-t border-slate-100 p-3">{children}</div>
+    </details>
+  );
+}
+
+export function Field({ label, hint, help, error, children, className, htmlFor, required, id }) {
   // Associate the label with its control automatically so it is announced by screen readers.
   const autoId = useId();
   let controlId = htmlFor;
@@ -61,15 +78,18 @@ export function Field({ label, hint, error, children, className, htmlFor, requir
   return (
     <div className={cx('space-y-1.5', className)} id={id}>
       {label && (
-        <label htmlFor={controlId} className="block text-xs font-semibold text-slate-700">
-          {label}
-          {required && (
-            <span className="text-red-500" aria-hidden="true">
-              {' '}
-              *
-            </span>
-          )}
-        </label>
+        <div className="flex items-center">
+          <label htmlFor={controlId} className="block text-xs font-semibold text-slate-700">
+            {label}
+            {required && (
+              <span className="text-red-500" aria-hidden="true">
+                {' '}
+                *
+              </span>
+            )}
+          </label>
+          {help && <HelpTip label={`About “${typeof label === 'string' ? label : 'this field'}”`}>{help}</HelpTip>}
+        </div>
       )}
       {children}
       {error ? <p className="text-xs text-red-600">{error}</p> : hint ? <p className="text-xs text-slate-500">{hint}</p> : null}
@@ -187,18 +207,19 @@ export function EmptyState({ icon: Icon = Info, title, description, action }) {
   );
 }
 
-export function ErrorBox({ error, onRetry }) {
+/** Error message with plain-language field names. `sections` lets page-editor errors name the section. */
+export function ErrorBox({ error, onRetry, sections }) {
   if (!error) return null;
   return (
     <div role="alert" className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
       <AlertTriangle size={18} className="mt-0.5 shrink-0" />
       <div className="flex-1">
-        <p className="font-medium">{error.message || String(error)}</p>
+        <p className="font-medium">{friendlyMessage(error) || String(error)}</p>
         {error.details?.length > 0 && (
-          <ul className="mt-1 list-inside list-disc text-xs">
+          <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs">
             {error.details.slice(0, 8).map((d, i) => (
               <li key={i}>
-                {d.path ? <code className="font-mono">{d.path}</code> : null} {d.message || d.label}
+                {d.path ? <strong className="font-semibold">{humanizePath(d.path, sections)}:</strong> : null} {d.message || d.label}
               </li>
             ))}
           </ul>
@@ -206,7 +227,7 @@ export function ErrorBox({ error, onRetry }) {
       </div>
       {onRetry && (
         <Button size="sm" onClick={onRetry}>
-          Retry
+          Try again
         </Button>
       )}
     </div>

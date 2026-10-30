@@ -11,6 +11,9 @@ const projectSchema = new mongoose.Schema(
     gallery: { type: [imageFields], default: [] },
     technologies: { type: [String], default: [] },
     category: { type: String, default: '', trim: true, maxlength: 60 },
+    role: { type: String, default: '', trim: true, maxlength: 120 }, // e.g. “Team lead — frontend”
+    year: { type: String, default: '', trim: true, maxlength: 20 },
+    highlights: { type: [String], default: [] }, // key results, e.g. “Cut load time by 40%”
     demoUrl: { type: String, default: '' },
     repoUrl: { type: String, default: '' },
     featured: { type: Boolean, default: false },

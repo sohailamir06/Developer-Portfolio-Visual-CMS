@@ -44,6 +44,9 @@ export const projectSchema = z.object({
   gallery: z.array(image.removeDefault()).max(30).default([]),
   technologies: tags,
   category: plainText(60).default(''),
+  role: plainText(120).default(''),
+  year: plainText(20).default(''),
+  highlights: z.array(plainText(200).min(1)).max(10).default([]),
   demoUrl: safeUrl.default(''),
   repoUrl: safeUrl.default(''),
   featured: z.boolean().default(false),
@@ -60,7 +63,7 @@ export const skillSchema = z.object({
     .string()
     .trim()
     .max(2048)
-    .refine((v) => v === '' || /^[A-Z][A-Za-z0-9]*$/.test(v) || mediaUrl.safeParse(v).success, 'Use an icon name or an image URL')
+    .refine((v) => v === '' || /^[A-Z][A-Za-z0-9]*$/.test(v) || mediaUrl.safeParse(v).success, 'Choose an icon or upload a picture')
     .default(''),
   proficiencyLabel: plainText(40).default(''),
   proficiency: z.union([z.null(), z.coerce.number().int().min(0).max(100)]).default(null),
@@ -99,7 +102,7 @@ export const reorderSchema = z.object({ ids: z.array(objectId).min(1).max(500) }
 const navItem = z.object({
   id: z.string().regex(/^[\w-]{1,40}$/),
   label: plainText(60).min(1, 'Label is required'),
-  url: safeUrl.refine((v) => v !== '', 'URL is required'),
+  url: safeUrl.refine((v) => v !== '', 'Please add a link'),
   newTab: z.boolean().default(false),
   parentId: z.string().regex(/^[\w-]{1,40}$/).nullable().default(null),
   order: z.coerce.number().int().min(0).default(0),
@@ -147,6 +150,17 @@ export const contactSchema = z.object({
 
 export const messageUpdateSchema = z.object({ status: z.enum(MESSAGE_STATUSES) });
 
+// ---- Analytics ----
+export const trackSchema = z.object({
+  kind: z.enum(['view', 'resume']),
+  path: z
+    .string()
+    .trim()
+    .max(200)
+    .regex(/^\/[a-z0-9\-/]*$/i, 'Invalid path')
+    .refine((p) => !/^\/(admin|preview|api)(\/|$)/.test(p), 'Not tracked'),
+});
+
 // ---- Users ----
 const password = z.string().min(10, 'Password must be at least 10 characters').max(200);
 
@@ -176,6 +190,6 @@ export const redirectSchema = z.object({
     .trim()
     .regex(/^\/[^\s?#]*$/, 'Must be a site path starting with /')
     .refine((v) => !v.startsWith('/api') && !v.startsWith('/admin'), 'Cannot redirect /api or /admin paths'),
-  to: safeUrl.refine((v) => v !== '', 'Destination is required'),
+  to: safeUrl.refine((v) => v !== '', 'Please add the new address'),
   statusCode: z.union([z.literal(301), z.literal(302)]).default(301),
 });

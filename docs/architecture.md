@@ -22,13 +22,14 @@ In production, Express also serves `client/dist` and injects per-route SEO tags 
 | `Navigation` | Two menus, `main` and `footer`. Items carry `parentId`, so a menu can have one level of dropdowns. |
 | `WebsiteSettings` | A single document holding branding, theme, contact details, social links, header, footer, SEO defaults and the résumé link. Its shape is enforced by zod. |
 | `Revision` | Immutable snapshots for pages (on publish), projects, settings and navigation (on save). The last 50 are kept per item. |
+| `DailyStat` | Aggregated visit counter: `{day, kind: view|resume, path, count}`. No IPs, cookies or user agents are stored. |
 | `ContactMessage` | Stores a status (`new`, `read`, `replied`, `archived` or `spam`) and a keyed hash of the sender's IP address, never the raw IP. |
 | `Redirect` | Old path → new path. Created automatically when a published slug changes; chains are collapsed. |
 | `User` | Stores a bcrypt hash, a role (`admin` or `editor`) and a status (`active` or `disabled`). |
 
 ## Sections
 
-`server/sections/index.js` is the single source of truth for section types: hero, about, skills, projects, experience, stats, cta, contact, textImage, testimonials and resume.
+`server/sections/index.js` is the single source of truth for section types: hero, about, skills, projects, experience, stats, cta, contact, textImage, testimonials, resume, education and certifications.
 
 - Each type is a zod schema in which every field has a default.
 - Unknown keys are stripped.

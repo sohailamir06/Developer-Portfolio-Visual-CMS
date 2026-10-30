@@ -97,7 +97,7 @@ function Defaults() {
   return (
     <Card className="max-w-2xl space-y-4 p-5">
       <ErrorBox error={err} />
-      <Field label="Title template" hint="%s is replaced with the page title, e.g. “%s | Jane Doe”.">
+      <Field label="Title pattern for every page" hint="%s is replaced by each page’s title, e.g. “%s | Jane Doe” → “Projects | Jane Doe”.">
         <Input value={seo.titleTemplate} onChange={(e) => set({ titleTemplate: e.target.value })} />
       </Field>
       <Field label="Default meta description" hint="Used when a page has no description of its own.">
@@ -109,7 +109,7 @@ function Defaults() {
       <Field label="X / Twitter handle">
         <Input value={seo.twitterHandle} onChange={(e) => set({ twitterHandle: e.target.value })} placeholder="@handle" />
       </Field>
-      <Toggle label="Allow search engines to index the site" description="Turn off while the site is under construction." checked={seo.allowIndexing} onChange={(allowIndexing) => set({ allowIndexing })} />
+      <Toggle label="Let Google show my website" description="Turn off while your website is still under construction." checked={seo.allowIndexing} onChange={(allowIndexing) => set({ allowIndexing })} />
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" icon={Save} onClick={save} loading={busy}>
           Save defaults
@@ -148,7 +148,7 @@ function Redirects({ redirects, onChange }) {
   };
   return (
     <Card className="p-5">
-      <p className="mb-4 text-sm text-slate-600">Redirects are created automatically when a published page or project URL changes. You can also add your own.</p>
+      <p className="mb-4 text-sm text-slate-600">When a page moves to a new address, visitors using the old address are sent to the new one. These are added automatically when you change a page’s address — you only need to add one yourself if you moved a page some other way.</p>
       <form onSubmit={add} className="mb-4 grid gap-2 md:grid-cols-[1fr_1fr_120px_auto]">
         <Input value={form.from} onChange={(e) => setForm((f) => ({ ...f, from: e.target.value.trim() }))} placeholder="/old-path" aria-label="From path" required />
         <LinkInput value={form.to} onChange={(to) => setForm((f) => ({ ...f, to }))} placeholder="/new-path or https://…" />
@@ -192,9 +192,9 @@ export default function Seo() {
 
   return (
     <>
-      <PageHeader title="SEO" description="Control how your pages appear in search engines and when shared on social media." />
+      <PageHeader title="Google & sharing" description="Control how your pages look in Google search results and when someone shares a link to them." />
       <Tabs
-        tabs={[['content', 'Pages & projects'], ['redirects', 'Redirects', data?.redirects.length], ...(user?.role === 'admin' ? [['defaults', 'Site defaults']] : [])]}
+        tabs={[['content', 'Pages & projects'], ['redirects', 'Moved pages', data?.redirects.length], ...(user?.role === 'admin' ? [['defaults', 'Defaults for the whole site']] : [])]}
         value={tab}
         onChange={setTab}
         className="mb-5"

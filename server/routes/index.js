@@ -3,7 +3,7 @@ import multer from 'multer';
 import { z } from 'zod';
 import { env } from '../config/env.js';
 import { requireAuth, requireCsrf, requireRole } from '../middleware/auth.js';
-import { contactLimiter, loginLimiter } from '../middleware/security.js';
+import { contactLimiter, loginLimiter, trackLimiter } from '../middleware/security.js';
 import { badRequest } from '../utils/errors.js';
 import { objectId, seoSchema, validate } from '../utils/validation.js';
 import * as v from '../validators/content.js';
@@ -17,6 +17,7 @@ import * as pages from '../controllers/pages.js';
 import * as projects from '../controllers/projects.js';
 import * as media from '../controllers/media.js';
 import * as site from '../controllers/site.js';
+import * as analytics from '../controllers/analytics.js';
 import { collectionController } from '../controllers/collection.js';
 
 const idParam = validate(z.object({ id: objectId }).passthrough(), 'params');
@@ -48,12 +49,14 @@ publicRouter.get('/skills', pub.listSkills);
 publicRouter.get('/experience', pub.listExperience);
 publicRouter.get('/redirects/resolve', pub.resolveRedirectPath);
 publicRouter.post('/contact', contactLimiter, validate(v.contactSchema), pub.submitContact);
+publicRouter.post('/track', trackLimiter, validate(v.trackSchema), analytics.track);
 
 // ---------------- Admin (authenticated + CSRF on every write) ----------------
 const admin = Router();
 admin.use(requireAuth, requireCsrf);
 
 admin.get('/dashboard', site.dashboard);
+admin.get('/analytics', analytics.summary);
 admin.get('/section-types', pages.sectionTypes);
 
 admin.get('/pages', pages.list);

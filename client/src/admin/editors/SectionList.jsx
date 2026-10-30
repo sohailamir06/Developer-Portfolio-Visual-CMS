@@ -7,7 +7,7 @@ import { cx } from '../../utils/links.js';
 export function AddSectionModal({ open, onClose, onAdd }) {
   return (
     <Modal open={open} onClose={onClose} title="Add a section" size="lg">
-      <p className="mb-4 text-sm text-slate-500">Choose a template. You can edit every text, image and button afterwards.</p>
+      <p className="mb-4 text-sm text-slate-500">Pick the kind of section you want. It is added with example text that you can change straight away.</p>
       <div className="grid gap-3 sm:grid-cols-2">
         {Object.entries(SECTION_META).map(([type, meta]) => (
           <button
@@ -34,15 +34,15 @@ export default function SectionList({ sections, selectedId, onSelect, onReorder,
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Sections ({sections.length})</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Page sections ({sections.length})</h2>
         <Button size="sm" variant="primary" icon={Plus} onClick={onAddClick}>
-          Add
+          Add section
         </Button>
       </div>
       <div className="flex-1 overflow-y-auto p-2">
         {sections.length === 0 ? (
           <div className="m-2 rounded-lg border-2 border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
-            This page is empty.
+            This page has no sections yet.
             <Button size="sm" className="mt-3" icon={Plus} onClick={onAddClick}>
               Add first section
             </Button>
@@ -67,9 +67,9 @@ export default function SectionList({ sections, selectedId, onSelect, onReorder,
                     </span>
                   </button>
                   <div className={cx('flex items-center', !selected && 'opacity-60 group-hover:opacity-100')}>
-                    <IconButton icon={s.visible ? Eye : EyeOff} label={s.visible ? 'Hide section' : 'Show section'} onClick={() => onToggle(s.id)} className="!h-7 !w-7" />
-                    <IconButton icon={Copy} label="Duplicate section" onClick={() => onDuplicate(s.id)} className="!h-7 !w-7" />
-                    <IconButton icon={Trash2} label="Delete section" variant="danger-ghost" onClick={() => onDelete(s.id)} className="!h-7 !w-7" />
+                    <IconButton icon={s.visible ? Eye : EyeOff} label={s.visible ? 'Hide this section from visitors' : 'Show this section to visitors'} onClick={() => onToggle(s.id)} className="!h-7 !w-7" />
+                    <IconButton icon={Copy} label="Make a copy of this section" onClick={() => onDuplicate(s.id)} className="!h-7 !w-7" />
+                    <IconButton icon={Trash2} label="Delete this section" variant="danger-ghost" onClick={() => onDelete(s.id)} className="!h-7 !w-7" />
                   </div>
                 </div>
               );
@@ -77,7 +77,7 @@ export default function SectionList({ sections, selectedId, onSelect, onReorder,
           />
         )}
       </div>
-      <p className="border-t border-slate-200 px-4 py-2 text-[11px] text-slate-400">Drag ⋮⋮ to reorder. Click an element in the preview to edit it.</p>
+      <p className="border-t border-slate-200 px-4 py-2 text-[11px] text-slate-400">Drag ⋮⋮ to move a section up or down. Click anything in the preview to change it.</p>
     </div>
   );
 }

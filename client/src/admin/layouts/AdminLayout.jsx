@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { cx } from '../../utils/links.js';
+import CommandPalette from '../components/CommandPalette.jsx';
 
 const NAV = [
   ['Overview', [['/admin', 'Dashboard', LayoutDashboard, true]]],
@@ -14,12 +15,12 @@ const NAV = [
     ['/admin/projects', 'Projects', FolderKanban],
     ['/admin/skills', 'Skills', Sparkles],
     ['/admin/experience', 'Experience', Briefcase],
-    ['/admin/media', 'Media Library', Image],
+    ['/admin/media', 'Pictures & files', Image],
   ]],
   ['Site', [
-    ['/admin/navigation', 'Navigation', Navigation],
+    ['/admin/navigation', 'Menus', Navigation],
     ['/admin/settings', 'Settings', Settings, false, 'admin'],
-    ['/admin/seo', 'SEO', Search],
+    ['/admin/seo', 'Google & sharing', Search],
     ['/admin/messages', 'Messages', Inbox],
     ['/admin/users', 'Users', Users, false, 'admin'],
   ]],
@@ -62,7 +63,34 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [palette, setPalette] = useState(false);
   useEffect(() => setOpen(false), [location.pathname]);
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPalette((p) => !p);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const searchButton = (
+    <div className="px-3 pt-1">
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(false);
+          setPalette(true);
+        }}
+        className="flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 hover:border-slate-300 hover:text-slate-700"
+      >
+        <Search size={15} /> <span className="flex-1 text-left">Quick search</span>
+        <kbd className="rounded border border-slate-200 bg-white px-1.5 text-[10px]">Ctrl K</kbd>
+      </button>
+    </div>
+  );
 
   const signOut = async () => {
     await logout();
@@ -100,6 +128,7 @@ export default function AdminLayout() {
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex">
         {brand}
+        {searchButton}
         <Sidebar />
         {footer}
       </aside>
@@ -121,6 +150,7 @@ export default function AdminLayout() {
                 <X size={18} />
               </button>
             </div>
+            {searchButton}
             <Sidebar onNavigate={() => setOpen(false)} />
             {footer}
           </aside>
@@ -130,6 +160,7 @@ export default function AdminLayout() {
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <Outlet />
       </main>
+      <CommandPalette open={palette} onClose={() => setPalette(false)} />
     </div>
   );
 }

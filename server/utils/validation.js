@@ -1,6 +1,33 @@
 import { z } from 'zod';
 import sanitizeHtml from 'sanitize-html';
 
+// Plain-language validation messages for the (non-technical) site owner. Explicit messages in schemas still win.
+z.setErrorMap((issue, ctx) => {
+  switch (issue.code) {
+    case 'invalid_type':
+      if (issue.received === 'undefined' || issue.received === 'null') return { message: 'This is required' };
+      return { message: 'This value isn’t valid here' };
+    case 'too_small':
+      if (issue.type === 'string') return { message: issue.minimum <= 1 ? 'This can’t be empty' : `Please use at least ${issue.minimum} characters` };
+      if (issue.type === 'array') return { message: `Please add at least ${issue.minimum}` };
+      return { message: `Please use a number of at least ${issue.minimum}` };
+    case 'too_big':
+      if (issue.type === 'string') return { message: `Please keep this under ${issue.maximum} characters` };
+      if (issue.type === 'array') return { message: `You can add up to ${issue.maximum} items` };
+      return { message: `Please use a number no higher than ${issue.maximum}` };
+    case 'invalid_enum_value':
+      return { message: 'Please choose one of the available options' };
+    case 'invalid_string':
+      if (issue.validation === 'email') return { message: 'Please enter a valid email address' };
+      if (issue.validation === 'url') return { message: 'Please enter a full web address, starting with https://' };
+      return { message: 'This format isn’t valid' };
+    case 'invalid_date':
+      return { message: 'Please enter a valid date' };
+    default:
+      return { message: ctx.defaultError };
+  }
+});
+
 const SAFE_PROTOCOLS = ['http:', 'https:', 'mailto:', 'tel:'];
 
 /** Accepts '', site-relative paths, #anchors, and http(s)/mailto/tel URLs. Rejects javascript:, data:, etc. */
@@ -23,7 +50,7 @@ export const safeUrl = z
   .string()
   .trim()
   .max(2048)
-  .refine(isSafeUrl, { message: 'Enter a valid URL (https://…, /path, #anchor, mailto: or tel:)' });
+  .refine(isSafeUrl, { message: 'This link won’t work. Choose one of your pages or use a full web address starting with https://' });
 
 /** Absolute http(s) URL or site-relative path — used for image sources. */
 export const mediaUrl = z
@@ -31,7 +58,7 @@ export const mediaUrl = z
   .trim()
   .max(2048)
   .refine((v) => v === '' || /^https?:\/\//i.test(v) || (v.startsWith('/') && !v.startsWith('//')), {
-    message: 'Image URL must be https://… or a /path',
+    message: 'This picture link won’t work. Upload the picture or paste a full address starting with https://',
   });
 
 export const slug = z
@@ -40,7 +67,7 @@ export const slug = z
   .toLowerCase()
   .min(1)
   .max(120)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters, numbers and hyphens only');
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use only lowercase letters, numbers and hyphens (e.g. my-page)');
 
 export const objectId = z.string().regex(/^[a-f0-9]{24}$/i, 'Invalid id');
 

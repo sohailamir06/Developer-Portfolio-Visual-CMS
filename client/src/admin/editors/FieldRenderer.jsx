@@ -48,7 +48,7 @@ function ListField({ field, value = [], onChange }) {
           setOpen(value.length);
         }}
       >
-        Add {field.label.toLowerCase().replace(/s$/, '')}
+        Add {field.itemName || 'item'}
       </Button>
     </div>
   );
@@ -124,7 +124,7 @@ export default function FieldRenderer({ field, value, onChange, highlighted }) {
   }
   return (
     <div id={id} className={cx('-m-1.5 rounded-lg p-1.5 transition', highlighted && 'bg-blue-50 ring-2 ring-blue-400')}>
-      <Field label={field.label} hint={field.type === 'toggle' ? undefined : field.hint} htmlFor={`${id}-input`}>
+      <Field label={field.label} hint={field.hint} help={field.help} htmlFor={`${id}-input`}>
         {control}
       </Field>
     </div>

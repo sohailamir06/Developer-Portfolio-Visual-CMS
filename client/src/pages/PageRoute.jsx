@@ -6,6 +6,7 @@ import { useSite } from '../context/SiteContext.jsx';
 import { PageRenderer } from '../components/sections/index.jsx';
 import { ErrorState, Loading } from '../components/common/Status.jsx';
 import NotFound from './NotFound.jsx';
+import { track } from '../utils/track.js';
 
 /** Resolves a redirect for a missing path; returns { to } or null. */
 export async function findRedirect(path) {
@@ -43,7 +44,11 @@ export default function PageRoute({ slug: fixedSlug }) {
     setState({ loading: true, page: null, error: null, redirect: null });
     publicApi
       .page(slug)
-      .then((page) => active && setState({ loading: false, page, error: null, redirect: null }))
+      .then((page) => {
+        if (!active) return;
+        setState({ loading: false, page, error: null, redirect: null });
+        track('view', location.pathname);
+      })
       .catch(async (err) => {
         const e = toApiError(err);
         const redirect = e.status === 404 ? await findRedirect(location.pathname) : null;

@@ -62,7 +62,7 @@ function NewPageModal({ open, onClose, onCreated }) {
             maxLength={120}
           />
         </Field>
-        <Field label="URL slug" hint={`The page will live at ${window.location.origin}/${form.slug || '…'}`} required>
+        <Field label="Web address" hint={`Your page will be at ${window.location.origin}/${form.slug || '…'}`} help="The last part of the page’s web address. It is filled in from the title automatically — you rarely need to change it." required>
           <Input
             value={form.slug}
             onChange={(e) => {
@@ -73,10 +73,10 @@ function NewPageModal({ open, onClose, onCreated }) {
           />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Page type">
+          <Field label="What kind of page?">
             <Select value={form.pageType} onChange={(e) => setForm((f) => ({ ...f, pageType: e.target.value }))} options={PAGE_TYPES} />
           </Field>
-          <Field label="Start with">
+          <Field label="Start with" help="“Suggested sections” adds ready-made sections with example text. “Blank page” starts empty.">
             <Select value={form.template} onChange={(e) => setForm((f) => ({ ...f, template: e.target.value }))} options={[['standard', 'Suggested sections'], ['blank', 'Blank page']]} />
           </Field>
         </div>
